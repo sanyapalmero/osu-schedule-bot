@@ -24,7 +24,7 @@ class Parser:
     def parse(self, text):
         start_index = text.find(self.START_TAG)
         end_index = text.find(self.END_TAG)
-        table = text[start_index:end_index + 8]
+        table = text[start_index:end_index + len(self.END_TAG)]
 
         parsed_table = html.fromstring(table)
         current_day_td_tag = parsed_table.xpath(f".//td[text()=\"{self.test_date}\"]")[0]
@@ -54,12 +54,32 @@ class Parser:
         return schedule
 
 
+def show_schedule(schedule):
+    for subject in schedule:
+        if subject.exists:
+            print(subject)
+
+
 def main():
     parser = Parser()
     schedule = parser.get_schedule()
-    print(parser.test_date)
-    for subject in schedule:
-        print(subject)
+    print(f"Сегодня {parser.test_date}. Какой прекрасный день!")
 
+    subjects_count = 0
+    for subject in schedule:
+        if subject.exists:
+            subjects_count += 1
+
+    if subjects_count == 0:
+        print("У тебя сегодня выходной! Отдыхай :)")
+    elif subjects_count == 1:
+        print("У тебя сегодня всего лишь 1 пара! Красота :)")
+        show_schedule(schedule)
+    elif subjects_count >= 2 or subjects_count <= 4:
+        print(f"У тебя сегодня {subjects_count} пары. Ты справишься! Удачи :)")
+        show_schedule(schedule)
+    elif subjects_count >= 5:
+        print(f"У тебя сегодня {subjects_count} пар. Огого, прилично. Не забудь захватить с собой еды! :)")
+        show_schedule(schedule)
 
 main()
