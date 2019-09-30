@@ -485,4 +485,7 @@ MigrationBackup/
 # Local settings
 local_settings.py
 
+# Storage files
+storage.json
+
 # End of https://www.gitignore.io/api/venv,python,visualstudio,visualstudiocode
