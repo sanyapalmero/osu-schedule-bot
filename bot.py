@@ -49,8 +49,7 @@ def open_storage():
 
 def main():
     print("---Bot started---")
-    req = Request(proxy_url=settings.BOT_PROXY)
-    bot = Bot(settings.BOT_TOKEN, request=req)
+    bot = Bot(settings.BOT_TOKEN)
     print("---Connected---")
 
     updater = Updater(bot=bot)
