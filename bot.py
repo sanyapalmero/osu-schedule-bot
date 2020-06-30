@@ -15,7 +15,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
-SCHEDULE_MASK = "https://www.osu.ru/pages/schedule/"
+SCHEDULE_MASK = "osu.ru/pages/schedule/"
 
 
 def help(bot, context):
@@ -39,7 +39,7 @@ def update(bot, context, args):
     database = Database(settings.DATABASE_FILE)
     user_exists = database.user_exists(user_id)
 
-    if not schedule.startswith(SCHEDULE_MASK):
+    if SCHEDULE_MASK not in schedule:
         bot.send_message(chat_id=user_id, text="Ой, кажется это не ссылка на расписание :(")
         return
 
@@ -57,7 +57,7 @@ def message_handle(bot, context):
     database = Database(settings.DATABASE_FILE)
     user_exists = database.user_exists(user_id)
 
-    if not schedule.startswith(SCHEDULE_MASK):
+    if SCHEDULE_MASK not in schedule:
         bot.send_message(chat_id=user_id, text="Ой, кажется это не ссылка на расписание :(")
         return
 
