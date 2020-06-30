@@ -31,3 +31,8 @@ class Database:
             sql = "UPDATE users SET active = ? WHERE user_id = ?"
             user = self.cursor.execute(sql, [False, user_id])
             return user
+
+    def update_schedule(self, user_id, schedule):
+        with self.connection:
+            sql = "UPDATE users SET schedule = ? WHERE user_id = ?"
+            self.cursor.execute(sql, [schedule, user_id])

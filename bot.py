@@ -15,10 +15,31 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
+SCHEDULE_MASK = "https://www.osu.ru/pages/schedule/"
+
+
 def start(bot, context):
     """/start command"""
     message = "Привет! Я - Хлоя, и я буду присылать тебе твое расписание.\nПришли мне, пожалуйста, в следующем сообщении ссылку на твоё расписание.\nВажно, чтобы расписание было на весь семестр, а не на две недели."
     bot.send_message(chat_id=context.message.chat_id, text=message)
+
+def update(bot, context, args):
+    """/update command"""
+    user_id = context.message.chat_id
+    schedule = args[0]
+    database = Database(settings.DATABASE_FILE)
+    user_exists = database.user_exists(user_id)
+
+    if not schedule.startswith(SCHEDULE_MASK):
+        bot.send_message(chat_id=user_id, text="Ой, кажется это не ссылка на расписание :(")
+        return
+
+    if user_exists:
+        database.update_schedule(user_id, schedule)
+    else:
+        database.subscribe_user(user_id, schedule)
+
+    bot.send_message(chat_id=user_id, text="Готово! Твоё расписание было успешно обновлено :)")
 
 
 def message_handle(bot, context):
@@ -26,16 +47,17 @@ def message_handle(bot, context):
     schedule = context.message.text
     database = Database(settings.DATABASE_FILE)
     user_exists = database.user_exists(user_id)
+
+    if not schedule.startswith(SCHEDULE_MASK):
+        bot.send_message(chat_id=user_id, text="Ой, кажется это не ссылка на расписание :(")
+        return
+
     if not user_exists:
-        mask = "https://www.osu.ru/pages/schedule/"
-        if schedule.startswith(mask):
-            database.subscribe_user(user_id, schedule)
-            message = f"Спасибо! Твое расписание: {schedule} было успешно сохранено.\nС завтрашнего дня в 7:00 каждый день ты будешь получать свое расписание! :)"
-            bot.send_message(chat_id=user_id, text=message)
-        else:
-            bot.send_message(chat_id=user_id, text="Ой, кажется это не ссылка на расписание :(")
+        database.subscribe_user(user_id, schedule)
+        message = f"Спасибо! Твое расписание: {schedule} было успешно сохранено.\nС завтрашнего дня в 7:00 каждый день ты будешь получать свое расписание! :)"
+        bot.send_message(chat_id=user_id, text=message)
     else:
-        bot.send_message(chat_id=user_id, text="Ой, а ты уже подписан, хочешь обновить ссылку на расписание? Введи /update")
+        bot.send_message(chat_id=user_id, text="Ой, а ты уже подписан, хочешь обновить ссылку на расписание? Введи /update и через пробел ссылку на новое расписание. Пример: /upadte https://www.osu.ru/pages/schedule/...")
 
 
 def main():
@@ -49,10 +71,14 @@ def main():
     start_handler = CommandHandler('start', start)
     dispatcher.add_handler(start_handler)
 
+    update_handler = CommandHandler('update', update, pass_args=True)
+    dispatcher.add_handler(update_handler)
+
     message_handler = MessageHandler(Filters.text, message_handle)
     dispatcher.add_handler(message_handler)
 
     updater.start_polling()
 
+    updater.idle()
 
 main()
