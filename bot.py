@@ -1,18 +1,13 @@
-import requests
-import logging
-import settings
 import json
+import logging
 
+import requests
 from telegram.bot import Bot
+from telegram.ext import CommandHandler, Filters, MessageHandler, Updater
 from telegram.utils.request import Request
-from telegram.ext import Updater, CommandHandler, MessageHandler, Filters
 
-
-# TODO:
-# 1 - сохранение chat_id и расписания в json
-# 2 - рассылка расписания в указанное время
-# 3 - метод удаления пользователя из рассылки
-
+import settings
+from database import Database
 
 logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
@@ -27,24 +22,20 @@ def start(bot, context):
 
 
 def message_handle(bot, context):
-    mask = "https://www.osu.ru/pages/schedule/"
-    if context.message.text.startswith(mask):
-        message = f"Спасибо! Твое расписание: {context.message.text} было успешно сохранено.\nС завтрашнего дня в 7:00 каждый день ты будешь получать свое расписание! :)"
-        bot.send_message(chat_id=context.message.chat_id, text=message)
+    user_id = context.message.chat_id
+    schedule = context.message.text
+    database = Database(settings.DATABASE_FILE)
+    user_exists = database.user_exists(user_id)
+    if not user_exists:
+        mask = "https://www.osu.ru/pages/schedule/"
+        if schedule.startswith(mask):
+            database.subscribe_user(user_id, schedule)
+            message = f"Спасибо! Твое расписание: {schedule} было успешно сохранено.\nС завтрашнего дня в 7:00 каждый день ты будешь получать свое расписание! :)"
+            bot.send_message(chat_id=user_id, text=message)
+        else:
+            bot.send_message(chat_id=user_id, text="Ой, кажется это не ссылка на расписание :(")
     else:
-        bot.send_message(chat_id=context.message.chat_id, text="Ой, кажется это не ссылка на расписание :(")
-
-
-class User:
-    def __init__(self, user_chat_id, user_schedule):
-        self.user_chat_id = user_chat_id
-        self.user_schedule = user_schedule
-
-
-def open_storage():
-    with open(settings.STORAGE_FILE, "r") as file:
-        data = json.load(file)
-        return data
+        bot.send_message(chat_id=user_id, text="Ой, а ты уже подписан, хочешь обновить ссылку на расписание? Введи /update")
 
 
 def main():

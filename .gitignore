@@ -488,4 +488,7 @@ local_settings.py
 # Storage files
 storage.json
 
+# Database file
+*.db
+
 # End of https://www.gitignore.io/api/venv,python,visualstudio,visualstudiocode

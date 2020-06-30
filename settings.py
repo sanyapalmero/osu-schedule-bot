@@ -2,7 +2,7 @@ BOT_TOKEN = ""
 
 BOT_PROXY = ""
 
-STORAGE_FILE = ""
+DATABASE_FILE = ""
 
 SEND_TIME = ""
 
