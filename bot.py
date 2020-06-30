@@ -18,14 +18,23 @@ logger = logging.getLogger(__name__)
 SCHEDULE_MASK = "https://www.osu.ru/pages/schedule/"
 
 
+def help(bot, context):
+    """/help command"""
+    message = "Тебе доступные следующие команды:\n/start\n/update <ссылка>"
+    bot.send_message(chat_id=context.message.chat_id, text=message)
+
 def start(bot, context):
     """/start command"""
-    message = "Привет! Я - Хлоя, и я буду присылать тебе твое расписание.\nПришли мне, пожалуйста, в следующем сообщении ссылку на твоё расписание.\nВажно, чтобы расписание было на весь семестр, а не на две недели."
+    message = "Привет! Я - Хлоя, и я буду присылать тебе твое расписание.\nПришли мне, пожалуйста, в следующем сообщении ссылку на твоё расписание.\nВажно, чтобы расписание было на весь семестр, а не на две недели.\nТакже ты можешь ввести /help и посмотреть все доступные команды"
     bot.send_message(chat_id=context.message.chat_id, text=message)
 
 def update(bot, context, args):
     """/update command"""
     user_id = context.message.chat_id
+    if not args:
+        bot.send_message(chat_id=user_id, text="Ой, кажется ты забыл дописать ссылку после команды :)")
+        return
+
     schedule = args[0]
     database = Database(settings.DATABASE_FILE)
     user_exists = database.user_exists(user_id)
@@ -67,6 +76,9 @@ def main():
 
     updater = Updater(bot=bot)
     dispatcher = updater.dispatcher
+
+    help_handler = CommandHandler('help', help)
+    dispatcher.add_handler(help_handler)
 
     start_handler = CommandHandler('start', start)
     dispatcher.add_handler(start_handler)
