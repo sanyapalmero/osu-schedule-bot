@@ -20,7 +20,7 @@ SCHEDULE_MASK = "osu.ru/pages/schedule/"
 
 def help(bot, context):
     """/help command"""
-    message = "Тебе доступные следующие команды:\n/start\n/update <ссылка>"
+    message = "Тебе доступные следующие команды:\n/start - Добавить расписание\n/delete Удалить расписание\n/help Помощь\n По всем вопросам: @pa1m3r0"
     bot.send_message(chat_id=context.message.chat_id, text=message)
 
 def start(bot, context):
