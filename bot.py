@@ -20,13 +20,31 @@ SCHEDULE_MASK = "osu.ru/pages/schedule/"
 
 def help(bot, context):
     """/help command"""
-    message = "Тебе доступные следующие команды:\n/start - Добавить расписание\n/delete Удалить расписание\n/help Помощь\n По всем вопросам: @pa1m3r0"
+    message = "Тебе доступные следующие команды:\n/start - Добавить расписание\n/delete Отписаться от рассылки\n/help Помощь\n По всем вопросам: @pa1m3r0"
     bot.send_message(chat_id=context.message.chat_id, text=message)
+
 
 def start(bot, context):
     """/start command"""
     message = "Привет! Я - Хлоя, и я буду присылать тебе твое расписание.\nПришли мне, пожалуйста, в следующем сообщении ссылку на твоё расписание.\nВажно, чтобы расписание было на весь семестр, а не на две недели.\nТакже ты можешь ввести /help и посмотреть все доступные команды"
     bot.send_message(chat_id=context.message.chat_id, text=message)
+
+
+def delete(bot, context):
+    """/delete command"""
+    user_id = context.message.chat_id
+    database = Database(settings.DATABASE_FILE)
+    user_exists = database.user_exists(user_id)
+    user_is_active = database.is_active_user(user_id)
+
+    if user_exists and user_is_active:
+        active = database.is_active_user(user_id)
+        database.unsubscribe_user(user_id)
+        message = "Готово! Ты больше не будешь получать своё расписание. Надеюсь, ты ещё вернёшься :)"
+        bot.send_message(chat_id=user_id, text=message)
+    else:
+        message = "Ой, кажется у меня и так нет твоего расписания, может быть, ты хочешь добавить его? Введи /help чтобы узнать все мои команды."
+        bot.send_message(chat_id=user_id, text=message)
 
 
 def message_handle(bot, context):
@@ -61,6 +79,9 @@ def main():
 
     start_handler = CommandHandler('start', start)
     dispatcher.add_handler(start_handler)
+
+    delete_handler = CommandHandler('delete', delete)
+    dispatcher.add_handler(delete_handler)
 
     message_handler = MessageHandler(Filters.text, message_handle)
     dispatcher.add_handler(message_handler)
