@@ -3,6 +3,7 @@ import logging
 from datetime import time
 
 import requests
+from telegram import Update
 from telegram.bot import Bot
 from telegram.ext import (CallbackContext, CommandHandler, Filters,
                           MessageHandler, Updater)
@@ -21,21 +22,21 @@ logger = logging.getLogger(__name__)
 SCHEDULE_MASK = "osu.ru/pages/schedule/"
 
 
-def help(bot, context):
+def help(update: Update, context: CallbackContext):
     """/help command"""
     message = "Тебе доступные следующие команды:\n/start - Добавить расписание\n/delete Отписаться от рассылки\n/help Помощь\n По всем вопросам: @pa1m3r0"
-    bot.send_message(chat_id=context.message.chat_id, text=message)
+    context.bot.send_message(chat_id=update.message.chat_id, text=message)
 
 
-def start(bot, context):
+def start(update: Update, context: CallbackContext):
     """/start command"""
     message = "Привет! Я - Хлоя, и я буду присылать тебе твое расписание.\nПришли мне, пожалуйста, в следующем сообщении ссылку на твоё расписание.\nВажно, чтобы расписание было на весь семестр, а не на две недели.\nТакже ты можешь ввести /help и посмотреть все доступные команды"
-    bot.send_message(chat_id=context.message.chat_id, text=message)
+    context.bot.send_message(chat_id=update.message.chat_id, text=message)
 
 
-def delete(bot, context):
+def delete(update: Update, context: CallbackContext):
     """/delete command"""
-    user_id = context.message.chat_id
+    user_id = update.message.chat_id
     database = Database(settings.DATABASE_FILE)
     user_exists = database.user_exists(user_id)
     user_is_active = database.is_active_user(user_id)
@@ -44,15 +45,15 @@ def delete(bot, context):
         active = database.is_active_user(user_id)
         database.unsubscribe_user(user_id)
         message = "Готово! Ты больше не будешь получать своё расписание. Надеюсь, ты ещё вернёшься :)"
-        bot.send_message(chat_id=user_id, text=message)
+        context.bot.send_message(chat_id=user_id, text=message)
     else:
         message = "Ой, кажется у меня и так нет твоего расписания, может быть, ты хочешь добавить его? Введи /help чтобы узнать все мои команды."
-        bot.send_message(chat_id=user_id, text=message)
+        context.bot.send_message(chat_id=user_id, text=message)
 
 
-def message_handle(bot, context):
-    user_id = context.message.chat_id
-    schedule = context.message.text
+def message_handle(update: Update, context: CallbackContext):
+    user_id = update.message.chat_id
+    schedule = update.message.text
     database = Database(settings.DATABASE_FILE)
     user_exists = database.user_exists(user_id)
 
@@ -66,7 +67,7 @@ def message_handle(bot, context):
         database.subscribe_user(user_id, schedule)
 
     message = f"Спасибо! Твое расписание: {schedule} было успешно сохранено.\nС завтрашнего дня в 7:00 каждый день ты будешь получать свое расписание! :)"
-    bot.send_message(chat_id=user_id, text=message)
+    context.bot.send_message(chat_id=user_id, text=message)
 
 
 def send_schedule_task(context: CallbackContext):
