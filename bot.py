@@ -1,13 +1,16 @@
 import json
 import logging
+from datetime import time
 
 import requests
 from telegram.bot import Bot
-from telegram.ext import CommandHandler, Filters, MessageHandler, Updater
+from telegram.ext import (CallbackContext, CommandHandler, Filters,
+                          MessageHandler, Updater)
 from telegram.utils.request import Request
 
 import settings
 from database import Database
+from schedule import get_user_schedule
 
 logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
@@ -66,12 +69,22 @@ def message_handle(bot, context):
     bot.send_message(chat_id=user_id, text=message)
 
 
+def send_schedule_task(context: CallbackContext):
+    database = Database(settings.DATABASE_FILE)
+    active_users = database.get_active_users()
+    for user in active_users:
+        user_id = user[0]
+        schedule_link = user[1]
+        schedule = get_user_schedule(schedule_link)
+        context.bot.send_message(chat_id=user_id, text=schedule)
+
+
 def main():
     print("---Bot started---")
     bot = Bot(settings.BOT_TOKEN)
     print("---Connected---")
 
-    updater = Updater(bot=bot)
+    updater = Updater(bot=bot, use_context=True)
     dispatcher = updater.dispatcher
 
     help_handler = CommandHandler('help', help)
@@ -85,6 +98,8 @@ def main():
 
     message_handler = MessageHandler(Filters.text, message_handle)
     dispatcher.add_handler(message_handler)
+
+    updater.job_queue.run_daily(send_schedule_task, time=time(16, 44, 0))
 
     updater.start_polling()
 

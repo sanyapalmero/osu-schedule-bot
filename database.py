@@ -7,8 +7,8 @@ class Database:
 
     def get_active_users(self):
         with self.connection:
-            sql = "SELECT * FROM users WHERE active = ?"
-            users = self.cursor.execute(sql, [True])
+            sql = "SELECT user_id, schedule FROM users WHERE active = ?"
+            users = self.cursor.execute(sql, [True]).fetchall()
             return users
 
     def user_exists(self, user_id):
