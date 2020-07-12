@@ -99,7 +99,7 @@ def main():
     message_handler = MessageHandler(Filters.text, message_handle)
     dispatcher.add_handler(message_handler)
 
-    updater.job_queue.run_daily(send_schedule_task, time=time(16, 44, 0))
+    updater.job_queue.run_daily(send_schedule_task, time=time(7, 0, 0))
 
     updater.start_polling()
 
