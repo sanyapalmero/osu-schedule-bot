@@ -3,6 +3,10 @@ from lxml import html
 from datetime import datetime
 
 
+TEST_DATE = ""
+TEST_LINK = ""
+
+
 class Subject:
     def __init__(self, order, exists, name=None, aud=None):
         self.order = order
@@ -20,20 +24,22 @@ class Subject:
 class Parser:
     START_TAG = "<table"
     END_TAG = "</table>"
-    test_date = "02.10.2019" #TODO: remove later
 
     def __init__(self):
-        self.current_date = datetime.now().strftime("%d.%m.%Y")
+        self.current_date = datetime.now().strftime("%d.%m.%Y") if not TEST_DATE else TEST_DATE
 
     def parse(self, text):
         start_index = text.find(self.START_TAG)
-        end_index = text.find(self.END_TAG)
+        end_index = text.rfind(self.END_TAG)
         table = text[start_index:end_index + len(self.END_TAG)]
 
         parsed_table = html.fromstring(table)
-        current_day_td_tag = parsed_table.xpath(f".//td[text()=\"{self.test_date}\"]")[0]
-        current_day_tr_tag = current_day_td_tag.getparent()
-        current_day_td_tags = current_day_tr_tag.xpath('td')
+        current_day_td_tag = parsed_table.xpath(f".//td[text()=\"{self.current_date}\"]")
+        if current_day_td_tag:
+            current_day_tr_tag = current_day_td_tag[0].getparent()
+            current_day_td_tags = current_day_tr_tag.xpath('td')
+        else:
+            return []
 
         schedule = []
         order = 1
@@ -50,7 +56,6 @@ class Parser:
 
         return schedule
 
-
     def get_schedule(self, link):
         response = requests.get(link)
         schedule = self.parse(response.text)
@@ -66,9 +71,12 @@ def make_str_schedule(schedule):
 
 
 def get_user_schedule(link):
+    if TEST_LINK:
+        link = TEST_LINK
+
     parser = Parser()
     schedule = parser.get_schedule(link)
-    message = f"Сегодня {parser.test_date}. Какой прекрасный день!"
+    message = f"Сегодня {parser.current_date}. Какой прекрасный день!\n"
 
     subjects_count = 0
     for subject in schedule:
@@ -76,10 +84,10 @@ def get_user_schedule(link):
             subjects_count += 1
 
     if subjects_count == 0:
-        message += "\nУ тебя сегодня выходной! Отдыхай :)"
+        message += "У тебя сегодня выходной! Отдыхай :)"
         return message
     elif subjects_count == 1:
-        message += "\nУ тебя сегодня всего лишь 1 пара! Красота :)"
+        message += "У тебя сегодня всего лишь 1 пара! Красота :)"
         message += make_str_schedule(schedule)
         return message
     elif subjects_count >= 2 or subjects_count <= 4:
@@ -90,3 +98,7 @@ def get_user_schedule(link):
         message += f"У тебя сегодня {subjects_count} пар. Огого, прилично. Не забудь захватить с собой еды! :)"
         message += make_str_schedule(schedule)
         return message
+
+
+# Also you can run only this file to check parsing schedule
+# print(get_user_schedule(TEST_LINK))
