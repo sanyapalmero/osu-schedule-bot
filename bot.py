@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 
 
 SCHEDULE_MASK = "osu.ru/pages/schedule/"
-
+MODE_FULL = "mode=full"
 
 def help(update: Update, context: CallbackContext):
     """/help command"""
@@ -58,7 +58,11 @@ def message_handle(update: Update, context: CallbackContext):
     user_exists = database.user_exists(user_id)
 
     if SCHEDULE_MASK not in schedule:
-        bot.send_message(chat_id=user_id, text="Ой, кажется это не ссылка на расписание :(")
+        context.bot.send_message(chat_id=user_id, text="Ой, кажется это не ссылка на расписание :(")
+        return
+
+    if MODE_FULL not in schedule:
+        context.bot.send_message(chat_id=user_id, text="Ой, кажется это расписание не на весь семестр :(")
         return
 
     if user_exists:
